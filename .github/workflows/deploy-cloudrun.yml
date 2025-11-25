@@ -56,9 +56,18 @@ jobs:
           docker push $IMAGE:${{ github.sha }}
 
 
-      - name: Deploy to Cloud Run
+      - name: Deploy API service
         run: |
-          gcloud run deploy $SERVICE_NAME \
+          gcloud run deploy pdf-api \
+            --image=$IMAGE:${{ github.sha }} \
+            --region=$REGION \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=8080
+
+      - name: Deploy Worker service
+        run: |
+          gcloud run deploy pdf-worker \
             --image=$IMAGE:${{ github.sha }} \
             --region=$REGION \
             --platform=managed \
