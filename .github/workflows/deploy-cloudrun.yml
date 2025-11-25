@@ -33,6 +33,12 @@ jobs:
           project_id: ${{ env.PROJECT_ID }}
           service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
           export_default_credentials: true
+      - name: Authenticate gcloud
+        run: |
+          echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' > ${HOME}/gcp-key.json
+          gcloud auth activate-service-account --key-file=${HOME}/gcp-key.json
+          gcloud config set project $PROJECT_ID
+
 
       - name: Build Docker image
         run: |
