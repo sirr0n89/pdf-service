@@ -1,0 +1,60 @@
+name: Build & Deploy to Cloud Run
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      REGION: ${{ secrets.GCP_REGION }}
+      SERVICE_NAME: pdf-service
+      IMAGE: europe-west3-docker.pkg.dev/cne-ws25/pdf-service/app
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Build with Maven
+        run: mvn -B clean package
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          export_default_credentials: true
+
+      - name: Build Docker image
+        run: |
+          docker build -t $IMAGE:${{ github.sha }} .
+
+      - name: Login to Artifact Registry
+        uses: docker/login-action@v3
+        with:
+          registry: europe-west3-docker.pkg.dev
+          username: _json_key
+          password: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Push Docker image
+        run: |
+          docker push $IMAGE:${{ github.sha }}
+
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy $SERVICE_NAME \
+            --image=$IMAGE:${{ github.sha }} \
+            --region=$REGION \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=8080
