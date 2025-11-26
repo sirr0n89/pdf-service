@@ -1,10 +1,10 @@
 package de.cne.ws25.pdfservice.jobs;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,36 +13,36 @@ public class PdfJobPublisher {
 
     private final String projectId;
     private final String topicId;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public PdfJobPublisher(
-            @Value("${spring.cloud.gcp.project-id:}") String projectIdEnv,
+            @Value("${spring.cloud.gcp.project-id}") String projectId,
             @Value("${app.pubsub.topic}") String topicId
     ) {
-        // wenn du spring.cloud.gcp.project-id nicht hast, kannst du auch
-        // Project ID fest verdrahten oder aus Umgebungsvariable lesen
-        this.projectId = projectIdEnv.isBlank() ? "cne-ws25" : projectIdEnv;
+        this.projectId = projectId;
         this.topicId = topicId;
     }
 
-    public void publishJob(PdfJobMessage message) throws Exception {
-        ProjectTopicName topicName = ProjectTopicName.of(projectId, topicId);
-        Publisher publisher = null;
-        try {
-            publisher = Publisher.newBuilder(topicName).build();
+    // ⭐️ WICHTIG! Diese Methode fehlt bei dir bisher.
+    public void publish(PdfJobMessage job) throws Exception {
 
-            String json = objectMapper.writeValueAsString(message);
+        ProjectTopicName topicName = ProjectTopicName.of(projectId, topicId);
+
+        Publisher publisher = Publisher.newBuilder(topicName).build();
+
+        try {
+            String json = objectMapper.writeValueAsString(job);
             ByteString data = ByteString.copyFromUtf8(json);
 
-            PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
+            PubsubMessage message = PubsubMessage.newBuilder()
                     .setData(data)
                     .build();
 
-            publisher.publish(pubsubMessage).get(); // blockend, reicht hier
+            publisher.publish(message).get(); // wartet auf Bestätigung
+
         } finally {
-            if (publisher != null) {
-                publisher.shutdown();
-            }
+            publisher.shutdown();
         }
     }
 }

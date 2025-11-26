@@ -16,7 +16,6 @@ public class ConvertController {
 
     private final GcsStorageService storageService;
     private final PdfJobPublisher jobPublisher;
-
     private final String outputBucket;
 
     public ConvertController(
@@ -30,31 +29,37 @@ public class ConvertController {
     }
 
     @PostMapping("/convert")
-    public ResponseEntity<?> uploadAndEnqueue(@RequestPart("file") MultipartFile file) {
+    public ResponseEntity<String> uploadAndEnqueue(@RequestParam("file") MultipartFile file) {
         try {
-            StoredFile stored = storageService.uploadInputFile(file);
+            // 1. Upload ins Input-Bucket
+            StoredFile stored = storageService.store(file);
 
+            // 2. Job-ID erzeugen
             String jobId = UUID.randomUUID().toString();
-            PdfJobMessage msg = new PdfJobMessage(
+
+            // 3. Job-Nachricht bauen
+            PdfJobMessage job = new PdfJobMessage(
                     jobId,
+                    "IMAGE_TO_PDF",
                     stored.bucket(),
                     stored.objectName(),
-                    outputBucket,
-                    "IMAGE_TO_PDF"
+                    outputBucket
             );
 
-            jobPublisher.publishJob(msg);
+            // 4. In Pub/Sub Topic schicken
+            jobPublisher.publish(job);
 
-            // Async-Response
-            String response = """
+            // 5. 202 zurückgeben (async)
+            String body = """
                     Job angelegt.
                     jobId: %s
                     input: %s
                     outputBucket: %s
                     (Worker macht den Rest async über Pub/Sub)
-                    """.formatted(jobId, stored.gsPath(), outputBucket);
+                    """.formatted(jobId, stored.gcsPath(), outputBucket);
 
-            return ResponseEntity.accepted().body(response);
+            return ResponseEntity.accepted().body(body);
+
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError()
