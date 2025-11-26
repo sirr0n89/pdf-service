@@ -30,6 +30,7 @@ public class ConvertController {
 
     @PostMapping("/convert")
     public ResponseEntity<String> uploadAndEnqueue(@RequestParam("file") MultipartFile file) {
+        System.out.println("### ConvertController LIVE VERSION ###");
         try {
             // 1. Upload ins Input-Bucket
             StoredFile stored = storageService.store(file);
