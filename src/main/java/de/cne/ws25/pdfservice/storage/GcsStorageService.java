@@ -22,7 +22,7 @@ public class GcsStorageService {
         this.inputBucket = inputBucket;
     }
 
-    public String uploadInputFile(MultipartFile file) throws IOException {
+    public StoredFile uploadInputFile(MultipartFile file) throws IOException {
         String ext = "";
         String original = file.getOriginalFilename();
         if (original != null && original.contains(".")) {
@@ -38,7 +38,7 @@ public class GcsStorageService {
 
         storage.create(blobInfo, file.getBytes());
 
-        // vorerst geben wir einfach den GCS-Pfad zurück
-        return String.format("gs://%s/%s", inputBucket, objectName);
+        String gsPath = "gs://" + inputBucket + "/" + objectName;
+        return new StoredFile(inputBucket, objectName, gsPath);
     }
 }
