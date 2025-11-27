@@ -90,7 +90,7 @@ public class ConvertController {
                     <html lang="de">
                     <head>
                       <meta charset="UTF-8">
-                      <title>MC↺nverter – PDF wird erstellt</title>
+                      <title>CNSE Convert  – PDF wird erstellt</title>
                       <link rel="stylesheet"
                             href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
                       <link rel="stylesheet"
@@ -213,7 +213,7 @@ public class ConvertController {
                 <html lang="de">
                 <head>
                   <meta charset="UTF-8">
-                  <title>MC↺nverter – PDF fertig</title>
+                  <title>CNSE Convert – PDF fertig</title>
                   <link rel="stylesheet"
                         href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
                   <link rel="stylesheet"
