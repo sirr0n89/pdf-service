@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Bild zu PDF</title>
+</head>
+<body>
+<h1>Bild zu PDF konvertieren</h1>
+
+<form action="/convert" method="post" enctype="multipart/form-data">
+    <label for="file">Datei auswählen:</label>
+    <input type="file" id="file" name="file" required>
+    <button type="submit">Hochladen & konvertieren</button>
+</form>
+
+<p>Nach dem Upload bekommst du einen Link auf das PDF zurück.<br>
+    Der Link funktioniert, sobald der Worker fertig ist.</p>
+
+</body>
+</html>

@@ -4,10 +4,11 @@ import de.cne.ws25.pdfservice.jobs.PdfJobMessage;
 import de.cne.ws25.pdfservice.jobs.PdfJobPublisher;
 import de.cne.ws25.pdfservice.storage.GcsStorageService;
 import de.cne.ws25.pdfservice.storage.StoredFile;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.util.UUID;
 
@@ -28,7 +29,7 @@ public class ConvertController {
         this.outputBucket = outputBucket;
     }
 
-    @PostMapping("/convert")
+    @PostMapping(value = "/convert", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> uploadAndEnqueue(@RequestParam("file") MultipartFile file) {
         System.out.println("### ConvertController LIVE VERSION ###");
         try {
@@ -50,20 +51,44 @@ public class ConvertController {
             // 4. In Pub/Sub Topic schicken
             jobPublisher.publish(job);
 
-            // 5. 202 zurückgeben (async)
-            String body = """
-                    Job angelegt.
-                    jobId: %s
-                    input: %s
-                    outputBucket: %s
-                    (Worker macht den Rest async über Pub/Sub)
-                    """.formatted(jobId, stored.gcsPath(), outputBucket);
+            // 5. Pfad der späteren PDF (muss zum Worker passen!)
+            String outputObject = "jobs/" + jobId + "/output.pdf";
 
-            return ResponseEntity.accepted().body(body);
+            // einfacher (potentiell öffentlicher) GCS-Link
+            String pdfUrl = String.format(
+                    "https://storage.googleapis.com/%s/%s",
+                    outputBucket,
+                    outputObject
+            );
+
+            // 6. HTML-Antwort mit Link zurückgeben
+            String html = """
+                    <!doctype html>
+                    <html lang="de">
+                    <head>
+                      <meta charset="UTF-8">
+                      <title>Job angelegt</title>
+                    </head>
+                    <body>
+                      <h1>Job angelegt</h1>
+                      <p><strong>Job-ID:</strong> %s</p>
+                      <p>Dein PDF wird im Hintergrund erzeugt.</p>
+                      <p>Sobald die Verarbeitung fertig ist, ist es hier erreichbar:</p>
+                      <p><a href="%s" target="_blank">%s</a></p>
+                      <p><a href="/">Neues Bild hochladen</a></p>
+                    </body>
+                    </html>
+                    """.formatted(jobId, pdfUrl, pdfUrl);
+
+            return ResponseEntity
+                    .accepted()
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(html);
 
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError()
+                    .contentType(MediaType.TEXT_PLAIN)
                     .body("Fehler beim Anlegen des Jobs: " + e.getMessage());
         }
     }
