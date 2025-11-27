@@ -41,10 +41,10 @@ public class ConvertController {
             // 3. Job-Nachricht bauen
             PdfJobMessage job = new PdfJobMessage(
                     jobId,
-                    "IMAGE_TO_PDF",
-                    stored.bucket(),
-                    stored.objectName(),
-                    outputBucket
+                    stored.bucket(),       // inputBucket
+                    stored.objectName(),   // inputObject
+                    outputBucket,          // outputBucket
+                    "IMAGE_TO_PDF"         // type
             );
 
             // 4. In Pub/Sub Topic schicken
