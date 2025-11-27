@@ -9,6 +9,7 @@ import de.cne.ws25.pdfservice.jobs.PdfJobPublisher;
 import de.cne.ws25.pdfservice.storage.GcsStorageService;
 import de.cne.ws25.pdfservice.storage.StoredFile;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +37,7 @@ public class ConvertController {
     }
 
     @PostMapping(value = "/convert", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> uploadAndEnqueue(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Void> uploadAndEnqueue(@RequestParam("file") MultipartFile file) {
         System.out.println("### ConvertController LIVE VERSION ###");
         try {
             // 1. Upload ins Input-Bucket
@@ -57,37 +58,18 @@ public class ConvertController {
             // 4. In Pub/Sub Topic schicken
             jobPublisher.publish(job);
 
-            // 5. Status-URL (diese Seite prüft später, ob das PDF existiert)
+            // 5. Browser direkt auf Warteseite /job/{jobId} schicken
             String statusUrl = "/job/" + jobId;
 
-            String html = """
-                    <!doctype html>
-                    <html lang="de">
-                    <head>
-                      <meta charset="UTF-8">
-                      <title>Job angelegt</title>
-                    </head>
-                    <body>
-                      <h1>Job angelegt</h1>
-                      <p><strong>Job-ID:</strong> %s</p>
-                      <p>Dein PDF wird im Hintergrund erzeugt.</p>
-                      <p>Den Status kannst du hier prüfen:</p>
-                      <p><a href="%s">%s</a></p>
-                      <p><a href="/">Neues Bild hochladen</a></p>
-                    </body>
-                    </html>
-                    """.formatted(jobId, statusUrl, statusUrl);
-
             return ResponseEntity
-                    .accepted()
-                    .contentType(MediaType.TEXT_HTML)
-                    .body(html);
+                    .status(303) // See Other – Browser macht dann ein GET auf /job/{jobId}
+                    .header(HttpHeaders.LOCATION, statusUrl)
+                    .build();
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError()
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body("Fehler beim Anlegen des Jobs: " + e.getMessage());
+            // Bei Fehler normale 500er-Textantwort
+            return ResponseEntity.internalServerError().build();
         }
     }
 
