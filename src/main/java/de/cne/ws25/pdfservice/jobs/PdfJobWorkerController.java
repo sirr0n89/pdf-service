@@ -19,11 +19,18 @@ public class PdfJobWorkerController {
     @PostMapping("/pubsub/push")
     public ResponseEntity<String> handlePubSubPush(@RequestBody PubSubPushRequest request) {
         try {
+            System.out.println(">>> Pub/Sub Push empfangen");
+            System.out.println(">>> Raw message: " + request);
+
             String data = request.message.data;
             String json = new String(Base64.decodeBase64(data));
+            System.out.println(">>> Decoded JSON: " + json);
+
             PdfJobMessage job = objectMapper.readValue(json, PdfJobMessage.class);
+            System.out.println(">>> Job geladen: " + job);
 
             if (!"IMAGE_TO_PDF".equals(job.type())) {
+                System.out.println(">>> Job-Typ ignoriert: " + job.type());
                 return ResponseEntity.ok("Job-Typ ignoriert: " + job.type());
             }
 
@@ -34,13 +41,11 @@ public class PdfJobWorkerController {
                     job.jobId()
             );
 
-            System.out.println("Job " + job.jobId() + " fertig. Output: " + outputPath);
+            System.out.println(">>> Job " + job.jobId() + " fertig. Output: " + outputPath);
 
-            // wichtig: 2xx → Pub/Sub ist zufrieden
             return ResponseEntity.ok("OK");
         } catch (Exception e) {
             e.printStackTrace();
-            // 5xx → Pub/Sub versucht es später nochmal
             return ResponseEntity.internalServerError()
                     .body("Fehler bei der Verarbeitung: " + e.getMessage());
         }
