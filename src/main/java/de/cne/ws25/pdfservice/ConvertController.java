@@ -84,46 +84,112 @@ public class ConvertController {
             boolean exists = (blob != null && blob.exists());
 
             if (!exists) {
+                // WARTEN-ANSICHT
                 String html = """
                     <!doctype html>
                     <html lang="de">
                     <head>
                       <meta charset="UTF-8">
-                      <title>PDF wird erstellt</title>
-                      <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
-                      <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-                      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
-                      <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+                      <title>MC↺nverter – PDF wird erstellt</title>
+                      <link rel="stylesheet"
+                            href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+                      <link rel="stylesheet"
+                            href="https://fonts.googleapis.com/icon?family=Material+Icons">
                       <!-- alle 3 Sekunden neu laden -->
                       <meta http-equiv="refresh" content="3">
                       <style>
-                        body { font-family: 'Roboto', sans-serif; }
-                        .page-container { max-width: 600px; margin: 40px auto; }
+                        * { box-sizing: border-box; }
+                        body {
+                          margin: 0;
+                          font-family: 'Roboto', sans-serif;
+                          background: #f1f1f1;
+                          color: #333;
+                        }
+                        .page-wrapper {
+                          max-width: 960px;
+                          margin: 0 auto;
+                          padding: 40px 16px 80px;
+                        }
+                        .page-header {
+                          text-align: center;
+                          margin-bottom: 40px;
+                        }
+                        .brand {
+                          font-size: 40px;
+                          font-weight: 300;
+                          letter-spacing: 2px;
+                        }
+                        .brand-icon {
+                          font-size: 32px;
+                          vertical-align: middle;
+                          margin: 0 4px;
+                        }
+                        .subtitle {
+                          margin-top: 8px;
+                          font-size: 16px;
+                          color: #666;
+                        }
+                        .card {
+                          background: #fff;
+                          border-radius: 8px;
+                          box-shadow: 0 3px 10px rgba(0,0,0,0.16);
+                          padding: 32px 24px;
+                        }
                         .center { text-align: center; }
+                        .job-id {
+                          font-size: 14px;
+                          color: #777;
+                          margin-bottom: 8px;
+                        }
+                        .spinner {
+                          width: 40px;
+                          height: 40px;
+                          border-radius: 50%%;
+                          border: 3px solid #ddd;
+                          border-top-color: #3f51b5;
+                          animation: spin 1s linear infinite;
+                          margin: 20px auto;
+                        }
+                        @keyframes spin {
+                          to { transform: rotate(360deg); }
+                        }
+                        .links {
+                          margin-top: 24px;
+                        }
+                        .btn-link {
+                          display: inline-block;
+                          margin: 0 4px;
+                          font-size: 13px;
+                          color: #3f51b5;
+                          text-decoration: none;
+                        }
+                        .btn-link:hover {
+                          text-decoration: underline;
+                        }
                       </style>
                     </head>
-                    <body class="mdl-color--grey-100">
-                      <div class="page-container">
-                        <div class="mdl-card mdl-shadow--4dp mdl-color--white" style="width: 100%%;">
-                          <div class="mdl-card__title mdl-color--primary mdl-color-text--white">
-                            <h2 class="mdl-card__title-text">PDF wird erstellt…</h2>
+                    <body>
+                      <div class="page-wrapper">
+                        <header class="page-header">
+                          <div class="brand">
+                            MC<span class="material-icons brand-icon">compare_arrows</span>nverter
                           </div>
-                          <div class="mdl-card__supporting-text center">
-                            <p><strong>Job-ID:</strong> %s</p>
-                            <p>Dein PDF wird verarbeitet. Diese Seite aktualisiert sich automatisch.</p>
-                            <div class="mdl-spinner mdl-js-spinner is-active"></div>
-                            <p style="margin-top: 16px;">
-                              <a class="mdl-button mdl-js-button mdl-button--primary" href="/job/%s">
-                                Manuell neu laden
-                              </a>
-                            </p>
-                            <p>
-                              <a class="mdl-button mdl-js-button" href="/">
-                                Neues Bild hochladen
-                              </a>
-                            </p>
+                          <div class="subtitle">Your PDF is being prepared…</div>
+                        </header>
+
+                        <main>
+                          <div class="card center">
+                            <div class="job-id">Job-ID: %s</div>
+                            <p>Dein Bild wurde hochgeladen und wird nun im Hintergrund in ein PDF konvertiert.</p>
+                            <p>Diese Seite aktualisiert sich automatisch, sobald das PDF fertig ist.</p>
+                            <div class="spinner"></div>
+                            <div class="links">
+                              <a class="btn-link" href="/job/%s">Manuell neu laden</a>
+                              ·
+                              <a class="btn-link" href="/">Neues Bild hochladen</a>
+                            </div>
                           </div>
-                        </div>
+                        </main>
                       </div>
                     </body>
                     </html>
@@ -135,6 +201,7 @@ public class ConvertController {
                         .body(html);
             }
 
+            // FERTIG-ANSICHT
             String pdfUrl = String.format(
                     "https://storage.googleapis.com/%s/%s",
                     outputBucket,
@@ -146,40 +213,111 @@ public class ConvertController {
                 <html lang="de">
                 <head>
                   <meta charset="UTF-8">
-                  <title>PDF fertig</title>
-                  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
-                  <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-                  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
-                  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+                  <title>MC↺nverter – PDF fertig</title>
+                  <link rel="stylesheet"
+                        href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+                  <link rel="stylesheet"
+                        href="https://fonts.googleapis.com/icon?family=Material+Icons">
                   <style>
-                    body { font-family: 'Roboto', sans-serif; }
-                    .page-container { max-width: 600px; margin: 40px auto; }
+                    * { box-sizing: border-box; }
+                    body {
+                      margin: 0;
+                      font-family: 'Roboto', sans-serif;
+                      background: #f1f1f1;
+                      color: #333;
+                    }
+                    .page-wrapper {
+                      max-width: 960px;
+                      margin: 0 auto;
+                      padding: 40px 16px 80px;
+                    }
+                    .page-header {
+                      text-align: center;
+                      margin-bottom: 40px;
+                    }
+                    .brand {
+                      font-size: 40px;
+                      font-weight: 300;
+                      letter-spacing: 2px;
+                    }
+                    .brand-icon {
+                      font-size: 32px;
+                      vertical-align: middle;
+                      margin: 0 4px;
+                    }
+                    .subtitle {
+                      margin-top: 8px;
+                      font-size: 16px;
+                      color: #666;
+                    }
+                    .card {
+                      background: #fff;
+                      border-radius: 8px;
+                      box-shadow: 0 3px 10px rgba(0,0,0,0.16);
+                      padding: 32px 24px;
+                    }
                     .center { text-align: center; }
+                    .job-id {
+                      font-size: 14px;
+                      color: #777;
+                      margin-bottom: 8px;
+                    }
+                    .primary-btn {
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 6px;
+                      padding: 10px 20px;
+                      border-radius: 4px;
+                      border: none;
+                      background: #3f51b5;
+                      color: #fff;
+                      text-decoration: none;
+                      font-size: 14px;
+                      font-weight: 500;
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                    }
+                    .primary-btn:hover {
+                      box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+                    }
+                    .links {
+                      margin-top: 24px;
+                    }
+                    .btn-link {
+                      display: inline-block;
+                      margin: 0 4px;
+                      font-size: 13px;
+                      color: #3f51b5;
+                      text-decoration: none;
+                    }
+                    .btn-link:hover {
+                      text-decoration: underline;
+                    }
                   </style>
                 </head>
-                <body class="mdl-color--grey-100">
-                  <div class="page-container">
-                    <div class="mdl-card mdl-shadow--4dp mdl-color--white" style="width: 100%%;">
-                      <div class="mdl-card__title mdl-color--primary mdl-color-text--white">
-                        <h2 class="mdl-card__title-text">PDF ist fertig</h2>
+                <body>
+                  <div class="page-wrapper">
+                    <header class="page-header">
+                      <div class="brand">
+                        MC<span class="material-icons brand-icon">compare_arrows</span>nverter
                       </div>
-                      <div class="mdl-card__supporting-text center">
-                        <p><strong>Job-ID:</strong> %s</p>
-                        <p>Dein PDF ist jetzt verfügbar:</p>
+                      <div class="subtitle">Your PDF is ready.</div>
+                    </header>
+
+                    <main>
+                      <div class="card center">
+                        <div class="job-id">Job-ID: %s</div>
+                        <p>Dein PDF wurde erfolgreich erstellt und steht jetzt zum Download bereit.</p>
                         <p>
-                          <a class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent"
-                             href="%s" target="_blank">
-                            <i class="material-icons">picture_as_pdf</i>
+                          <a class="primary-btn" href="%s" target="_blank">
+                            <span class="material-icons" style="font-size:18px;">picture_as_pdf</span>
                             PDF öffnen
                           </a>
                         </p>
-                        <p>
-                          <a class="mdl-button mdl-js-button" href="/">
-                            Neues Bild hochladen
-                          </a>
-                        </p>
+                        <div class="links">
+                          <a class="btn-link" href="/">Neues Bild hochladen</a>
+                        </div>
                       </div>
-                    </div>
+                    </main>
                   </div>
                 </body>
                 </html>
@@ -197,5 +335,6 @@ public class ConvertController {
                     .body("Fehler beim Lesen des Job-Status: " + e.getMessage());
         }
     }
+
 
 }
