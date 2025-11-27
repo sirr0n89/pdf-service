@@ -11,18 +11,22 @@ const statusText = document.getElementById('statusText');
 const errorBox = document.getElementById('errorBox');
 const errorMessage = document.getElementById('errorMessage');
 
-let selectedFile = null;
+let selectedFiles = [];
+
 
 function resetProgress() {
     progressFill.style.width = '0%';
     progressPercent.textContent = '0%';
 }
 
-function setFile(file) {
-    selectedFile = file;
-    if (file) {
+function setFiles(files) {
+    selectedFiles = Array.from(files || []);
+    if (selectedFiles.length > 0) {
+        const totalSizeKb = Math.round(
+            selectedFiles.reduce((sum, f) => sum + f.size, 0) / 1024
+        );
         fileNameSpan.textContent =
-            file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
+            selectedFiles.length + ' Dateien (' + totalSizeKb + ' KB gesamt)';
         fileInfo.classList.remove('hidden');
         uploadBtn.disabled = false;
     } else {
@@ -30,6 +34,7 @@ function setFile(file) {
         uploadBtn.disabled = true;
     }
 }
+
 
 // Browse-Link öffnet Dateidialog
 browseLink.addEventListener('click', function (e) {
@@ -39,11 +44,12 @@ browseLink.addEventListener('click', function (e) {
 
 fileInput.addEventListener('change', function () {
     if (fileInput.files && fileInput.files.length > 0) {
-        setFile(fileInput.files[0]);
+        setFiles(fileInput.files);
     } else {
-        setFile(null);
+        setFiles([]);
     }
 });
+
 
 // Drag & Drop Events
 ['dragenter', 'dragover'].forEach(eventName => {
@@ -66,9 +72,10 @@ dropZone.addEventListener('drop', (e) => {
     const dt = e.dataTransfer;
     const files = dt.files;
     if (files && files.length > 0) {
-        setFile(files[0]); // erste Datei verwenden
+        setFiles(files); // alle gedroppten Dateien
     }
 });
+
 
 // Upload mit XHR + Progress
 document.getElementById('uploadForm').addEventListener('submit', function (e) {
@@ -76,7 +83,7 @@ document.getElementById('uploadForm').addEventListener('submit', function (e) {
     errorBox.classList.add('hidden');
     statusText.classList.add('hidden');
 
-    if (!selectedFile) {
+    if (!selectedFiles || selectedFiles.length === 0) {
         return;
     }
 
@@ -87,7 +94,8 @@ document.getElementById('uploadForm').addEventListener('submit', function (e) {
     statusText.classList.remove('hidden');
 
     const formData = new FormData();
-    formData.append('file', selectedFile);
+    // alle Dateien anhängen – Name "file" bleibt gleich
+    selectedFiles.forEach(file => formData.append('file', file));
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/convert', true);
@@ -126,14 +134,16 @@ document.getElementById('uploadForm').addEventListener('submit', function (e) {
 window.addEventListener('paste', (e) => {
     const items = e.clipboardData && e.clipboardData.items;
     if (!items) return;
+    const files = [];
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
         if (item.kind === 'file') {
             const file = item.getAsFile();
-            if (file) {
-                setFile(file);
-                break;
-            }
+            if (file) files.push(file);
         }
     }
+    if (files.length > 0) {
+        setFiles(files);
+    }
 });
+

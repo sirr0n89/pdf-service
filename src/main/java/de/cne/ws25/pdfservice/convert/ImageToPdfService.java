@@ -13,60 +13,68 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.List;
 
 @Service
 public class ImageToPdfService {
 
     private final Storage storage = StorageOptions.getDefaultInstance().getService();
 
-    public String convertImageObjectToPdf(
+    public String convertImageObjectsToPdf(
             String inputBucket,
-            String inputObject,
+            List<String> inputObjects,
             String outputBucket,
             String jobId
     ) throws Exception {
 
-        Blob blob = storage.get(inputBucket, inputObject);
-        if (blob == null) {
-            throw new IllegalArgumentException("Input object not found: " + inputObject);
+        if (inputObjects == null || inputObjects.isEmpty()) {
+            throw new IllegalArgumentException("Keine Input-Objekte vorhanden");
         }
 
-        byte[] imageBytes = blob.getContent();
-
         try (PDDocument doc = new PDDocument();
-             ByteArrayInputStream in = new ByteArrayInputStream(imageBytes);
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
-            // 🔁 Bildformat automatisch erkennen (PNG, JPEG, …)
-            BufferedImage bufferedImage = ImageIO.read(in);
-            if (bufferedImage == null) {
-                throw new IllegalArgumentException(
-                        "Unsupported or unreadable image format for object: " + inputObject
-                );
-            }
+            for (String objectName : inputObjects) {
 
-            PDRectangle pageSize = PDRectangle.A4;
-            PDPage page = new PDPage(pageSize);
-            doc.addPage(page);
+                Blob blob = storage.get(inputBucket, objectName);
+                if (blob == null) {
+                    throw new IllegalArgumentException("Input object not found: " + objectName);
+                }
 
-            // LosslessFactory kann PNG/JPEG usw. verarbeiten
-            PDImageXObject image = LosslessFactory.createFromImage(doc, bufferedImage);
+                byte[] imageBytes = blob.getContent();
 
-            float pageWidth = pageSize.getWidth();
-            float pageHeight = pageSize.getHeight();
+                try (ByteArrayInputStream in = new ByteArrayInputStream(imageBytes)) {
+                    BufferedImage bufferedImage = ImageIO.read(in);
+                    if (bufferedImage == null) {
+                        throw new IllegalArgumentException(
+                                "Unsupported or unreadable image format for object: " + objectName
+                        );
+                    }
 
-            float imgWidth = image.getWidth();
-            float imgHeight = image.getHeight();
-            float scale = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+                    // neue Seite pro Bild
+                    PDRectangle pageSize = PDRectangle.A4;
+                    PDPage page = new PDPage(pageSize);
+                    doc.addPage(page);
 
-            float drawWidth = imgWidth * scale;
-            float drawHeight = imgHeight * scale;
+                    PDImageXObject image = LosslessFactory.createFromImage(doc, bufferedImage);
 
-            float x = (pageWidth - drawWidth) / 2;
-            float y = (pageHeight - drawHeight) / 2;
+                    float pageWidth = pageSize.getWidth();
+                    float pageHeight = pageSize.getHeight();
 
-            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
-                cs.drawImage(image, x, y, drawWidth, drawHeight);
+                    float imgWidth = image.getWidth();
+                    float imgHeight = image.getHeight();
+                    float scale = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+
+                    float drawWidth = imgWidth * scale;
+                    float drawHeight = imgHeight * scale;
+
+                    float x = (pageWidth - drawWidth) / 2;
+                    float y = (pageHeight - drawHeight) / 2;
+
+                    try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                        cs.drawImage(image, x, y, drawWidth, drawHeight);
+                    }
+                }
             }
 
             doc.save(out);

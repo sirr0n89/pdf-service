@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.List;
 
 import java.util.UUID;
 
@@ -37,29 +38,49 @@ public class ConvertController {
     }
 
     @PostMapping(value = "/convert", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> uploadAndEnqueue(@RequestParam("file") MultipartFile file) {
-        System.out.println("### ConvertController LIVE VERSION ###");
+    public ResponseEntity<Void> uploadAndEnqueue(@RequestParam("file") MultipartFile[] files) {
+        System.out.println("### ConvertController LIVE VERSION (multi-image) ###");
         try {
-            // 1. Datei ins Input-Bucket laden
-            StoredFile stored = storageService.store(file);
+            if (files == null || files.length == 0) {
+                return ResponseEntity.badRequest().build();
+            }
 
-            // 2. Job-ID erzeugen
+            // 1. Job-ID erzeugen (brauchen wir für Status /job/{id}, nicht fürs Uploaden)
             String jobId = UUID.randomUUID().toString();
 
-            // 3. Pub/Sub-Job bauen und publishen
+            // 2. Alle Dateien ins Input-Bucket laden
+            List<String> objectNames = new java.util.ArrayList<>();
+            String inputBucket = null;
+
+            for (MultipartFile file : files) {
+                if (file.isEmpty()) continue;
+
+                StoredFile stored = storageService.store(file);
+                objectNames.add(stored.objectName());
+                if (inputBucket == null) {
+                    inputBucket = stored.bucket();
+                }
+            }
+
+            if (objectNames.isEmpty()) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            // 3. Job für Worker bauen: Bucket + Liste von Objekten
             PdfJobMessage job = new PdfJobMessage(
                     jobId,
-                    stored.bucket(),       // inputBucket
-                    stored.objectName(),   // inputObject
-                    outputBucket,          // outputBucket
-                    "IMAGE_TO_PDF"         // type
+                    inputBucket,
+                    objectNames,     // alle Bilder
+                    outputBucket,
+                    "IMAGE_TO_PDF"
             );
+
             jobPublisher.publish(job);
 
-            // 4. Browser direkt auf /job/{jobId} weiterleiten
+            // 4. Redirect auf /job/{jobId}
             String statusUrl = "/job/" + jobId;
             return ResponseEntity
-                    .status(303) // See Other
+                    .status(303)
                     .header(HttpHeaders.LOCATION, statusUrl)
                     .build();
 
@@ -68,6 +89,7 @@ public class ConvertController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
 
     @GetMapping("/job/{jobId}")
     public ResponseEntity<String> jobStatus(@PathVariable String jobId) {

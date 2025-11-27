@@ -34,9 +34,9 @@ public class PdfJobWorkerController {
                 return ResponseEntity.ok("Job-Typ ignoriert: " + job.type());
             }
 
-            String outputPath = imageToPdfService.convertImageObjectToPdf(
+            String outputPath = imageToPdfService.convertImageObjectsToPdf(
                     job.inputBucket(),
-                    job.inputObject(),
+                    job.inputObjects(),
                     job.outputBucket(),
                     job.jobId()
             );
