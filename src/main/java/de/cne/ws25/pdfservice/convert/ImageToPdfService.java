@@ -5,10 +5,12 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.stereotype.Service;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
@@ -35,10 +37,20 @@ public class ImageToPdfService {
              ByteArrayInputStream in = new ByteArrayInputStream(imageBytes);
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
-            PDImageXObject image = JPEGFactory.createFromStream(doc, in);
+            // 🔁 Bildformat automatisch erkennen (PNG, JPEG, …)
+            BufferedImage bufferedImage = ImageIO.read(in);
+            if (bufferedImage == null) {
+                throw new IllegalArgumentException(
+                        "Unsupported or unreadable image format for object: " + inputObject
+                );
+            }
+
             PDRectangle pageSize = PDRectangle.A4;
             PDPage page = new PDPage(pageSize);
             doc.addPage(page);
+
+            // LosslessFactory kann PNG/JPEG usw. verarbeiten
+            PDImageXObject image = LosslessFactory.createFromImage(doc, bufferedImage);
 
             float pageWidth = pageSize.getWidth();
             float pageHeight = pageSize.getHeight();
