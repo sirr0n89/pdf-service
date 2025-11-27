@@ -2,170 +2,359 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Bild zu PDF</title>
+    <title>MC↺nverter – Bild zu PDF</title>
 
-    <!-- Google Material Design Lite -->
-    <link rel="stylesheet"
-          href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
-    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-
-    <!-- Roboto + Icons -->
+    <!-- Google Fonts & Icons (Material-Style) -->
     <link rel="stylesheet"
           href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
     <link rel="stylesheet"
           href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
+            margin: 0;
             font-family: 'Roboto', sans-serif;
+            background: #f1f1f1;
+            color: #333;
         }
-        .page-container {
-            max-width: 600px;
-            margin: 40px auto;
+        .page-wrapper {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 40px 16px 80px;
         }
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .brand {
+            font-size: 56px;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+        .brand-icon {
+            font-size: 44px;
+            vertical-align: middle;
+            margin: 0 4px;
+        }
+        .subtitle {
+            margin-top: 8px;
+            font-size: 18px;
+            color: #666;
+        }
+        .subsubtitle {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.16);
+            padding: 40px 32px;
+        }
+
+        .drop-zone {
+            border-radius: 8px;
+            border: 2px dashed #bbb;
+            background: #fafafa;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease,
+            box-shadow 0.2s ease;
+        }
+        .drop-zone.drag-over {
+            border-color: #3f51b5;
+            background: #eef1ff;
+            box-shadow: 0 0 0 3px rgba(63,81,181,0.2);
+        }
+        .drop-icon {
+            font-size: 60px;
+            color: #777;
+            margin-bottom: 16px;
+        }
+        .drop-title {
+            font-size: 22px;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        .drop-subtitle {
+            font-size: 14px;
+            color: #777;
+        }
+        .drop-subtitle a {
+            color: #3f51b5;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .drop-hint {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 12px;
+        }
+
+        .file-info {
+            margin-top: 16px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .actions {
+            margin-top: 24px;
+            text-align: right;
+        }
+        .btn {
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            background: #3f51b5;
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn:disabled {
+            background: #b0b0b0;
+            cursor: default;
+            box-shadow: none;
+        }
+
+        .progress-wrapper {
+            margin-top: 24px;
+        }
+        .progress-label {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 6px;
+        }
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e0e0e0;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0;
+            background: #3f51b5;
+            transition: width 0.1s linear;
+        }
+        .progress-percent {
+            font-size: 12px;
+            color: #777;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .status-text {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .error-box {
+            margin-top: 16px;
+            padding: 10px 12px;
+            border-radius: 4px;
+            background: #ffebee;
+            color: #c62828;
+            font-size: 13px;
+        }
+
         .hidden {
             display: none;
         }
-        .file-name {
-            margin-left: 8px;
-            font-size: 0.9rem;
-            color: #555;
-        }
-        .center {
-            text-align: center;
-        }
-        .top-space {
-            margin-top: 24px;
+
+        @media (max-width: 600px) {
+            .brand {
+                font-size: 40px;
+            }
+            .card {
+                padding: 24px 16px;
+            }
         }
     </style>
 </head>
-<body class="mdl-color--grey-100">
-
-<div class="page-container">
-    <div class="mdl-card mdl-shadow--4dp mdl-color--white" style="width: 100%;">
-        <div class="mdl-card__title">
-            <h2 class="mdl-card__title-text">Bild zu PDF konvertieren</h2>
+<body>
+<div class="page-wrapper">
+    <header class="page-header">
+        <div class="brand">
+            MC<span class="material-icons brand-icon">compare_arrows</span>nverter
         </div>
-        <div class="mdl-card__supporting-text">
-            <p>Wähle ein Bild (PNG/JPEG) aus. Es wird hochgeladen, im Hintergrund
-                zu einem PDF konvertiert und du bekommst danach einen Link.</p>
+        <div class="subtitle">Securely convert images to PDF in the cloud.</div>
+        <div class="subsubtitle">Drag &amp; drop a file or browse from your computer.</div>
+    </header>
 
+    <main>
+        <div class="card">
             <form id="uploadForm">
                 <!-- verstecktes File-Input -->
-                <input type="file" id="fileInput" name="file" accept="image/*" class="hidden" required>
+                <input type="file" id="fileInput" name="file" accept="image/*" class="hidden">
 
-                <button type="button"
-                        id="chooseFileBtn"
-                        class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
-                    <i class="material-icons">file_upload</i>
-                    Datei auswählen
-                </button>
-                <span id="fileName" class="file-name">Keine Datei ausgewählt</span>
+                <div id="dropZone" class="drop-zone">
+                    <span class="material-icons drop-icon">file_upload</span>
+                    <div class="drop-title">Drop Files &amp; Folders Here</div>
+                    <div class="drop-subtitle">
+                        Or <a id="browseLink">Browse</a>
+                    </div>
+                    <div class="drop-hint">Paste files with ⌘+V / Ctrl+V</div>
+                </div>
 
-                <div class="top-space center">
-                    <button type="submit"
-                            id="submitBtn"
-                            class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent"
-                            disabled>
-                        <i class="material-icons">play_arrow</i>
-                        Hochladen &amp; konvertieren
+                <div id="fileInfo" class="file-info hidden">
+                    Ausgewählt: <span id="fileName"></span>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" id="uploadBtn" class="btn" disabled>
+                        <span class="material-icons" style="font-size:18px;">play_arrow</span>
+                        Upload &amp; Convert
                     </button>
                 </div>
-            </form>
 
-            <!-- Upload-Status -->
-            <div id="statusText" class="top-space center hidden">
-                <p>Upload läuft…</p>
-            </div>
-
-            <!-- Material Design Progress-Bar -->
-            <div id="progressContainer" class="hidden">
-                <div id="uploadProgress"
-                     class="mdl-progress mdl-js-progress mdl-progress__indeterminate">
+                <div id="progressWrapper" class="progress-wrapper hidden">
+                    <div class="progress-label">Upload fortschritt</div>
+                    <div class="progress-bar-bg">
+                        <div id="progressFill" class="progress-bar-fill"></div>
+                    </div>
+                    <div id="progressPercent" class="progress-percent">0%</div>
                 </div>
-            </div>
 
-            <div id="errorBox" class="top-space mdl-color--red-50 mdl-shadow--2dp hidden"
-                 style="padding: 12px; border-radius: 4px;">
-                <strong>Fehler:</strong>
-                <span id="errorMessage"></span>
-            </div>
+                <div id="statusText" class="status-text hidden"></div>
+
+                <div id="errorBox" class="error-box hidden">
+                    <strong>Fehler:</strong> <span id="errorMessage"></span>
+                </div>
+            </form>
         </div>
-    </div>
+    </main>
 </div>
 
 <script>
+    const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
-    const chooseFileBtn = document.getElementById('chooseFileBtn');
+    const browseLink = document.getElementById('browseLink');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const fileInfo = document.getElementById('fileInfo');
     const fileNameSpan = document.getElementById('fileName');
-    const submitBtn = document.getElementById('submitBtn');
-    const progressContainer = document.getElementById('progressContainer');
+    const progressWrapper = document.getElementById('progressWrapper');
+    const progressFill = document.getElementById('progressFill');
+    const progressPercent = document.getElementById('progressPercent');
     const statusText = document.getElementById('statusText');
     const errorBox = document.getElementById('errorBox');
     const errorMessage = document.getElementById('errorMessage');
 
-    chooseFileBtn.addEventListener('click', () => {
+    let selectedFile = null;
+
+    function resetProgress() {
+        progressFill.style.width = '0%';
+        progressPercent.textContent = '0%';
+    }
+
+    function setFile(file) {
+        selectedFile = file;
+        if (file) {
+            fileNameSpan.textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
+            fileInfo.classList.remove('hidden');
+            uploadBtn.disabled = false;
+        } else {
+            fileInfo.classList.add('hidden');
+            uploadBtn.disabled = true;
+        }
+    }
+
+    // Browse-Link öffnet Dateidialog
+    browseLink.addEventListener('click', function (e) {
+        e.preventDefault();
         fileInput.click();
     });
 
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files.length > 0) {
-            fileNameSpan.textContent = fileInput.files[0].name;
-            submitBtn.disabled = false;
+    fileInput.addEventListener('change', function () {
+        if (fileInput.files && fileInput.files.length > 0) {
+            setFile(fileInput.files[0]);
         } else {
-            fileNameSpan.textContent = 'Keine Datei ausgewählt';
-            submitBtn.disabled = true;
+            setFile(null);
         }
     });
 
+    // Drag & Drop Events
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('drag-over');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('drag-over');
+        });
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files.length > 0) {
+            // wir verwenden einfach die erste Datei
+            setFile(files[0]);
+        }
+    });
+
+    // Upload mit XHR + Progress
     document.getElementById('uploadForm').addEventListener('submit', function (e) {
         e.preventDefault();
         errorBox.classList.add('hidden');
+        statusText.classList.add('hidden');
 
-        if (fileInput.files.length === 0) {
+        if (!selectedFile) {
             return;
         }
 
-        // Progress-Bar sichtbar machen
-        progressContainer.classList.remove('hidden');
+        uploadBtn.disabled = true;
+        progressWrapper.classList.remove('hidden');
+        resetProgress();
+        statusText.textContent = 'Upload läuft…';
         statusText.classList.remove('hidden');
-        statusText.querySelector('p').textContent = 'Upload läuft…';
-
-        // MDL-Progress initialisieren
-        const progressBar = document.getElementById('uploadProgress');
-        if (progressBar.MaterialProgress) {
-            progressBar.MaterialProgress.setProgress(0);
-            progressBar.classList.remove('mdl-progress__indeterminate');
-        }
 
         const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
+        formData.append('file', selectedFile);
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/convert', true);
 
-        // Fortschritt während des Uploads
         xhr.upload.addEventListener('progress', function (event) {
-            if (event.lengthComputable && progressBar.MaterialProgress) {
-                const percent = (event.loaded / event.total) * 100;
-                progressBar.MaterialProgress.setProgress(percent);
+            if (event.lengthComputable) {
+                const percent = Math.round((event.loaded / event.total) * 100);
+                progressFill.style.width = percent + '%';
+                progressPercent.textContent = percent + '%';
             } else {
-                // Fallback: unbestimmte Animation
-                progressBar.classList.add('mdl-progress__indeterminate');
+                // wenn keine Größe bekannt ist, lass einfach eine animierte Bar laufen
+                progressFill.style.width = '100%';
             }
         });
 
         xhr.onreadystatechange = function () {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                // 303 / 202 / 200 – alles im 2xx/3xx Bereich ok
                 if (xhr.status >= 200 && xhr.status < 400) {
-                    statusText.querySelector('p').textContent = 'Upload abgeschlossen. Weiterleiten…';
-
-                    // final URL (nach Redirect) verwenden
+                    statusText.textContent = 'Upload abgeschlossen. Weiterleiten…';
                     const targetUrl = xhr.responseURL || '/';
-                    window.location.href = targetUrl;
+                    window.location.href = targetUrl; // z.B. /job/{jobId}
                 } else {
-                    progressContainer.classList.add('hidden');
+                    uploadBtn.disabled = false;
                     statusText.classList.add('hidden');
                     errorMessage.textContent = 'Upload fehlgeschlagen (Status ' + xhr.status + ').';
                     errorBox.classList.remove('hidden');
@@ -175,7 +364,22 @@
 
         xhr.send(formData);
     });
-</script>
 
+    // Optional: Einfügen von Dateien mit Paste
+    window.addEventListener('paste', (e) => {
+        const items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.kind === 'file') {
+                const file = item.getAsFile();
+                if (file) {
+                    setFile(file);
+                    break;
+                }
+            }
+        }
+    });
+</script>
 </body>
 </html>
