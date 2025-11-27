@@ -84,25 +84,50 @@ public class ConvertController {
             boolean exists = (blob != null && blob.exists());
 
             if (!exists) {
-                // Noch nicht fertig: einfache „Warteseite“ mit Auto-Refresh
                 String html = """
-                        <!doctype html>
-                        <html lang="de">
-                        <head>
-                          <meta charset="UTF-8">
-                          <title>Job läuft noch</title>
-                          <!-- alle 3 Sekunden neu laden -->
-                          <meta http-equiv="refresh" content="3">
-                        </head>
-                        <body>
-                          <h1>Job läuft noch</h1>
-                          <p><strong>Job-ID:</strong> %s</p>
-                          <p>Dein PDF wird noch erzeugt. Diese Seite aktualisiert sich automatisch.</p>
-                          <p><a href="/job/%s">Manuell neu laden</a></p>
-                          <p><a href="/">Neues Bild hochladen</a></p>
-                        </body>
-                        </html>
-                        """.formatted(jobId, jobId);
+                    <!doctype html>
+                    <html lang="de">
+                    <head>
+                      <meta charset="UTF-8">
+                      <title>PDF wird erstellt</title>
+                      <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+                      <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+                      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+                      <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+                      <!-- alle 3 Sekunden neu laden -->
+                      <meta http-equiv="refresh" content="3">
+                      <style>
+                        body { font-family: 'Roboto', sans-serif; }
+                        .page-container { max-width: 600px; margin: 40px auto; }
+                        .center { text-align: center; }
+                      </style>
+                    </head>
+                    <body class="mdl-color--grey-100">
+                      <div class="page-container">
+                        <div class="mdl-card mdl-shadow--4dp mdl-color--white" style="width: 100%%;">
+                          <div class="mdl-card__title mdl-color--primary mdl-color-text--white">
+                            <h2 class="mdl-card__title-text">PDF wird erstellt…</h2>
+                          </div>
+                          <div class="mdl-card__supporting-text center">
+                            <p><strong>Job-ID:</strong> %s</p>
+                            <p>Dein PDF wird verarbeitet. Diese Seite aktualisiert sich automatisch.</p>
+                            <div class="mdl-spinner mdl-js-spinner is-active"></div>
+                            <p style="margin-top: 16px;">
+                              <a class="mdl-button mdl-js-button mdl-button--primary" href="/job/%s">
+                                Manuell neu laden
+                              </a>
+                            </p>
+                            <p>
+                              <a class="mdl-button mdl-js-button" href="/">
+                                Neues Bild hochladen
+                              </a>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </body>
+                    </html>
+                    """.formatted(jobId, jobId);
 
                 return ResponseEntity
                         .ok()
@@ -110,7 +135,6 @@ public class ConvertController {
                         .body(html);
             }
 
-            // PDF existiert – Link bauen
             String pdfUrl = String.format(
                     "https://storage.googleapis.com/%s/%s",
                     outputBucket,
@@ -118,21 +142,48 @@ public class ConvertController {
             );
 
             String html = """
-                    <!doctype html>
-                    <html lang="de">
-                    <head>
-                      <meta charset="UTF-8">
-                      <title>PDF fertig</title>
-                    </head>
-                    <body>
-                      <h1>PDF fertig</h1>
-                      <p><strong>Job-ID:</strong> %s</p>
-                      <p>Dein PDF ist jetzt verfügbar:</p>
-                      <p><a href="%s" target="_blank">%s</a></p>
-                      <p><a href="/">Neues Bild hochladen</a></p>
-                    </body>
-                    </html>
-                    """.formatted(jobId, pdfUrl, pdfUrl);
+                <!doctype html>
+                <html lang="de">
+                <head>
+                  <meta charset="UTF-8">
+                  <title>PDF fertig</title>
+                  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+                  <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+                  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+                  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+                  <style>
+                    body { font-family: 'Roboto', sans-serif; }
+                    .page-container { max-width: 600px; margin: 40px auto; }
+                    .center { text-align: center; }
+                  </style>
+                </head>
+                <body class="mdl-color--grey-100">
+                  <div class="page-container">
+                    <div class="mdl-card mdl-shadow--4dp mdl-color--white" style="width: 100%%;">
+                      <div class="mdl-card__title mdl-color--primary mdl-color-text--white">
+                        <h2 class="mdl-card__title-text">PDF ist fertig</h2>
+                      </div>
+                      <div class="mdl-card__supporting-text center">
+                        <p><strong>Job-ID:</strong> %s</p>
+                        <p>Dein PDF ist jetzt verfügbar:</p>
+                        <p>
+                          <a class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent"
+                             href="%s" target="_blank">
+                            <i class="material-icons">picture_as_pdf</i>
+                            PDF öffnen
+                          </a>
+                        </p>
+                        <p>
+                          <a class="mdl-button mdl-js-button" href="/">
+                            Neues Bild hochladen
+                          </a>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </body>
+                </html>
+                """.formatted(jobId, pdfUrl);
 
             return ResponseEntity
                     .ok()
@@ -146,4 +197,5 @@ public class ConvertController {
                     .body("Fehler beim Lesen des Job-Status: " + e.getMessage());
         }
     }
+
 }
