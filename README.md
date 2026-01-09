@@ -1,18 +1,18 @@
-# CNSE Convert -- Image-to-PDF Converter (GCP Cloud Run)
+# CNSE Convert -- Universal File-to-PDF Converter (GCP Cloud Run)
 
-
-<a href="https://pdf-api-689516465881.europe-west3.run.app/">CNSE Convert</a> ist ein skalierbarer, serverloser Microservice zum
-Konvertieren verschiedenster Bilddateitypen in PDF -- betrieben auf **Google
+CNSE Convert ist ein skalierbarer, serverloser Microservice zum
+Konvertieren verschiedenster Dateitypen in PDF -- betrieben auf **Google
 Cloud Run** und entwickelt mit **Java/Spring Boot**.\
-Der Service akzeptiert u. a. **PNG**, **JPG**, und erzeugt daraus ein
-PDF-Dokument.
+Der Service akzeptiert u. a. **Bilder**, **ZIP-/RAR-Archive**,
+**Dokumente**, **Binärdateien** und erzeugt daraus ein oder mehrere
+PDF-Dokumente.
 
 ------------------------------------------------------------------------
 
 ## 🚀 Zusammenfassung
 
 CNSE Convert ermöglicht das automatische, standardisierte Umwandeln
-beliebiger Bilder in PDF.\
+beliebiger Dateien in PDF.\
 Ideal für Upload-Portale, Dokumentenverarbeitung,
 Automatisierungsprozesse und Backoffice-Systeme.
 
@@ -20,10 +20,14 @@ Automatisierungsprozesse und Backoffice-Systeme.
 
 ## ✨ Features
 
--   🖼️ **Bildkonvertierung** (PNG, JPG, GIF, WEBP → PDF)
--   📚 **Mehrseitige PDFs** bei mehreren Dateien
--   ☁️ **Cloud Run** -- voll autoskalierend
--   🔒 **HTTPS** by default
+-   🖼️ **Bildkonvertierung** (PNG, JPG, GIF, WEBP → PDF)\
+-   📦 **Archiv-Support** (ZIP/RAR → Inhalte extrahieren → Sammel-PDF)\
+-   📄 **Generische Binärdateien** werden analysiert (z. B. Hexdump) und
+    als PDF dargestellt\
+-   📚 **Mehrseitige PDFs** bei mehreren Dateien\
+-   ☁️ **Cloud Run** -- voll autoskalierend\
+-   🧹 **Keine Speicherung** von Dateien (Memory-only Verarbeitung)\
+-   🔒 **HTTPS** by default\
 -   ⚡ **Sehr schnelle Konvertierung** dank schlanker Architektur
 
 ------------------------------------------------------------------------
@@ -44,7 +48,7 @@ Konvertiert eine Datei in ein PDF-Dokument.
 **Beispiel:**
 
 ``` bash
-curl -X POST "https://pdf-api-689516465881.europe-west3.run.app/convert"   -F "file=@/path/to/your/file.png"   --output output.pdf
+curl -X POST "https://<your-cloud-run-url>/convert"   -F "file=@/path/to/your/file.png"   --output output.pdf
 ```
 
 **Response:**\
@@ -53,46 +57,63 @@ curl -X POST "https://pdf-api-689516465881.europe-west3.run.app/convert"   -F "f
 
 ------------------------------------------------------------------------
 
+## 💻 Lokale Nutzung
+
+### Voraussetzungen
+
+-   Java 17+
+-   Maven
+-   Docker (optional)
+
+### Starten (lokal)
+
+``` bash
+mvn spring-boot:run
+```
+
+### Build (JAR erzeugen)
+
+``` bash
+mvn clean package
+```
+
+------------------------------------------------------------------------
+
 ## ☁️ Deployment auf Google Cloud Run
 
-Automatisch bei Commits via GitHub Actions Workflow
+``` bash
+gcloud builds submit --tag gcr.io/<PROJECT-ID>/cnse-convert
+gcloud run deploy cnse-convert   --image gcr.io/<PROJECT-ID>/cnse-convert   --platform managed   --region europe-west3   --allow-unauthenticated
+```
 
 ------------------------------------------------------------------------
 
 ## 🖼️ Screenshots
-**Seite**
-<img width="1380" height="360" alt="image" src="https://github.com/sirr0n89/pdf-service/blob/main/docs/Index.png" />
 
-**Converted File**
-<img width="1380" height="360" alt="image" src="https://github.com/sirr0n89/pdf-service/blob/main/docs/Converted.png" />
+(Platzhalter -- bitte mit realen Screenshots ersetzen)
 
-**Dienste***
-<img width="1380" height="360" alt="image" src="https://github.com/sirr0n89/pdf-service/blob/main/docs/Buckets.png" />
-
-**Buckets**
-<img width="1380" height="360" alt="image" src="https://github.com/sirr0n89/pdf-service/blob/main/docs/Buckets.png" />
-
-**PubSub**
-<img width="1380" height="360" alt="image" src="https://github.com/sirr0n89/pdf-service/blob/main/docs/PubSub.png" />
-
+-   `docs/screenshots/ui-overview.png`
+-   `docs/screenshots/output-example.png`
 
 ------------------------------------------------------------------------
 
 ## 📁 Projektstruktur
 
-    /src/main/java/...
-        /config                 → GCP- & Spring-Konfiguration
-        /convert                → Konvertierungslogik (ImageToPdfService)
-        /jobs                   → Pub/Sub-Jobs & Worker
-        /storage                → Zugriff auf GCS & File-Metadaten
-        ConvertController       → REST-Endpoint für /convert
-        HealthController        → Health-Check-Endpoint
-        PdfserviceApplication   → Spring-Boot-Mainklasse
+    /src
+      /main/java/.../controller        → REST API
+      /main/java/.../service           → Konvertierungslogik
+      /main/java/.../utils             → Parser & Hilfsklassen
+      /main/resources                  → Konfiguration, Templates
+    /docs/screenshots                  → Screenshots für README
+    Dockerfile
+    README.md
 
 ------------------------------------------------------------------------
 
 ## 🛡️ Sicherheit & Datenschutz
 
+-   Keine Dateispeicherung -- Verarbeitung findet ausschließlich im
+    Arbeitsspeicher statt\
 -   Ausschließlich HTTPS-Zugriff über Cloud Run\
 -   Logs enthalten niemals Datei-Inhalte
 
@@ -107,4 +128,4 @@ MIT License
 ## 📞 Kontakt
 
 Bei Fragen oder Erweiterungswünschen:\
-**CNSE Development** -- chse1001@stud.hs-kl.de
+**CNSE Development** -- christian.seelert@example.com
