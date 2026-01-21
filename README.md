@@ -66,8 +66,8 @@ Automatisch bei Commits via GitHub Actions Workflow
 **Converted File**
 <img width="1380" height="360" alt="image" src="https://github.com/sirr0n89/pdf-service/blob/main/docs/Converted.png" />
 
-**Dienste***
-<img width="1380" height="360" alt="image" src="https://github.com/sirr0n89/pdf-service/blob/main/docs/Buckets.png" />
+**Dienste**
+<img width="1380" height="360" alt="image" src="https://github.com/sirr0n89/pdf-service/blob/main/docs/Dienste.png" />
 
 **Buckets**
 <img width="1380" height="360" alt="image" src="https://github.com/sirr0n89/pdf-service/blob/main/docs/Buckets.png" />
