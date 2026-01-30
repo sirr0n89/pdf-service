@@ -8,6 +8,7 @@
 		<version>4.0.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
+
 	<groupId>de.cne.ws25</groupId>
 	<artifactId>pdfservice</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
