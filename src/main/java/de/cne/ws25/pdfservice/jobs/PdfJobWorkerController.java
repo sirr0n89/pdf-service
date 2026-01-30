@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class PdfJobWorkerController {
 
+
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ImageToPdfService imageToPdfService;
 
